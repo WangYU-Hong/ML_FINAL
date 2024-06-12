@@ -5,6 +5,24 @@ from facenet_pytorch import InceptionResnetV1, MTCNN
 from tqdm import tqdm
 from types import MethodType
 from facenet_pytorch import MTCNN
+
+def create_folder(folder_name,parent_directory):
+    new_folder_path = os.path.join(parent_directory, folder_name)
+    # Use os.makedirs() to create the new folder, Set exist_ok=True to avoid errors if the folder already exists
+    os.makedirs(new_folder_path, exist_ok=True)
+create_folder('face_detect',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset')
+create_folder('train_face',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect')
+create_folder('train_noface',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect')
+create_folder('test_face',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect')
+create_folder('test_noface',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect')
+create_folder('adults',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\train_face')
+create_folder('children',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\train_face')
+create_folder('adults',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\test_face')
+create_folder('children',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\test_face')
+create_folder('adults',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\train_noface')
+create_folder('children',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\train_noface')
+create_folder('adults',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\test_noface')
+create_folder('children',r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\test_noface')
 # Desired dimensions
 desired_width = 370
 desired_height = 320
@@ -31,81 +49,95 @@ def detect_box(self, img, save_path=None):
     # Extract faces
     faces = self.extract(img, batch_boxes, save_path)
     return batch_boxes, faces
-### load model
-resnet = InceptionResnetV1(pretrained='vggface2').eval()
-mtcnn = MTCNN(
-  image_size=(370,320), keep_all=True, thresholds=[0.4, 0.5, 0.5], min_face_size=60
-)
-mtcnn.detect_box = MethodType(detect_box, mtcnn)
+def face_detection(saved_pictures,type,age):
+    ### load model
+    resnet = InceptionResnetV1(pretrained='vggface2').eval()
+    mtcnn = MTCNN(
+    image_size=(370,320), keep_all=True, thresholds=[0.4, 0.5, 0.5], min_face_size=0
+    )
+    mtcnn.detect_box = MethodType(detect_box, mtcnn)
+    all_people_faces = {}
+    mtcnn = MTCNN()
 
-### get encoded features for all saved images
-saved_pictures =  r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\dataset\train\adults'
-all_people_faces = {}
-mtcnn = MTCNN()
-
-count_no_face = 0
-count_multiple_faces = 0
-
-# Create a directory to save the cropped faces
-cropped_faces_dir = os.path.join(saved_pictures, 'detect_faces')
-no_faces_dir = os.path.join(saved_pictures, 'no_detect_faces')
-if not os.path.exists(cropped_faces_dir):
-    os.makedirs(cropped_faces_dir)
-if not os.path.exists(no_faces_dir):
-    os.makedirs(no_faces_dir)
-
-# Iterate over images in the folder
-for filename in os.listdir(saved_pictures):
-    if filename.endswith('.jpg'):
-        # Read the image
-        img_path = os.path.join(saved_pictures, filename)
-        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        if img is not None:
-            # Detect faces
-            batch_boxes, _ = mtcnn.detect(img)
-            if batch_boxes is not None and len(batch_boxes) == 1:
-                # If only one face detected, crop it and save
-                x1, y1, x2, y2 = map(int, batch_boxes[0])
-                face_img = img[y1:y2, x1:x2]
-                # Inside the loop where you process each image
-                if face_img is not None and face_img.size != 0:  # Check if face_img is not None and not empty
-                    # Perform resizing and other operations
-                    face_img = cv2.resize(face_img, (desired_width, desired_height))
-                    # Further processing or saving of the face image
+    count_no_face = 0
+    count_multiple_faces = 0
+    # Create a directory to save the cropped faces
+    cropped_faces_dir = os.path.join(saved_pictures, 'detect_faces')
+    no_faces_dir = os.path.join(saved_pictures, 'no_detect_faces')
+    if type == 'train':
+        if age == 'adults':
+            cropped_faces_dir = r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\train_face\adults'
+            no_faces_dir = r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\train_noface\adults'
+        if age == 'children':
+            cropped_faces_dir = r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\train_face\children'
+            no_faces_dir = r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\train_noface\children'
+    if type == 'test':
+        if age == 'adults':
+            cropped_faces_dir = r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\test_face\adults'
+            no_faces_dir = r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\test_noface\adults'
+        if age == 'children':
+            cropped_faces_dir = r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\test_face\children'
+            no_faces_dir = r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\face_detect\test_noface\children'
+    print(cropped_faces_dir)
+    print(no_faces_dir)
+    if not os.path.exists(cropped_faces_dir):
+        os.makedirs(cropped_faces_dir)
+    if not os.path.exists(no_faces_dir):
+        os.makedirs(no_faces_dir)
+    # Iterate over images in the folder
+    for filename in os.listdir(saved_pictures):
+        if filename.endswith('.jpg'):
+            # Read the image
+            img_path = os.path.join(saved_pictures, filename)
+            img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+            if img is not None:
+                # Detect faces
+                batch_boxes, _ = mtcnn.detect(img)
+                if batch_boxes is not None and len(batch_boxes) == 1:
+                    # If only one face detected, crop it and save
+                    x1, y1, x2, y2 = map(int, batch_boxes[0])
+                    face_img = img[y1:y2, x1:x2]
+                    # Inside the loop where you process each image
+                    if face_img is not None and face_img.size != 0:  # Check if face_img is not None and not empty
+                        # Perform resizing and other operations
+                        face_img = cv2.resize(face_img, (desired_width, desired_height))
+                        # Further processing or saving of the face image
+                    else:
+                        # Handle the case where no face is detected
+                        print(f"No face detected in {filename}. Original image saved.")
+                        # Optionally resize the original image before saving
+                        # img = cv2.resize(img, (desired_width, desired_height))
+                        cv2.imwrite(os.path.join(cropped_faces_dir, filename), img)
+                        count_no_face += 1
+                    # Check if the face image is not empty before saving
+                    if face_img.size != 0:
+                        face_filename = f"{os.path.splitext(filename)[0]}_face.jpg"
+                        face_path = os.path.join(cropped_faces_dir, face_filename)
+                        cv2.imwrite(os.path.join(cropped_faces_dir, filename), face_img)
+                        print(f"Face cropped and saved as: {face_path}")
+                    else:
+                        print(f"No face detected in {filename}. Original image saved.")
+                        cv2.imwrite(os.path.join(cropped_faces_dir, filename), img)
+                        count_no_face += 1
                 else:
-                    # Handle the case where no face is detected
-                    print(f"No face detected in {filename}. Original image saved.")
-                    # Optionally resize the original image before saving
-                    # img = cv2.resize(img, (desired_width, desired_height))
+                    # If no face or multiple faces detected, save the original image
+                    original_img_path = os.path.join(no_faces_dir, filename)
+                    #img = cv2.resize(img, (desired_width, desired_height))
                     cv2.imwrite(os.path.join(no_faces_dir, filename), img)
-                    count_no_face += 1
-                # Check if the face image is not empty before saving
-                if face_img.size != 0:
-                    face_filename = f"{os.path.splitext(filename)[0]}_face.jpg"
-                    face_path = os.path.join(cropped_faces_dir, face_filename)
-                    cv2.imwrite(face_path, face_img)
-                    print(f"Face cropped and saved as: {face_path}")
-                else:
-                    print(f"No face detected in {filename}. Original image saved.")
-                    cv2.imwrite(os.path.join(no_faces_dir, filename), img)
-                    count_no_face += 1
+                    print(f"No or multiple faces detected in {filename}. Original image saved as: {original_img_path}")
+                    if batch_boxes is None:
+                        count_no_face += 1
+                    else:
+                        count_multiple_faces += 1
             else:
-                # If no face or multiple faces detected, save the original image
-                original_img_path = os.path.join(no_faces_dir, filename)
-                #img = cv2.resize(img, (desired_width, desired_height))
-                cv2.imwrite(original_img_path, img)
-                print(f"No or multiple faces detected in {filename}. Original image saved as: {original_img_path}")
-                if batch_boxes is None:
-                    count_no_face += 1
-                else:
-                    count_multiple_faces += 1
-        else:
-            print(f"Error loading image: {img_path}.")
+                print(f"Error loading image: {img_path}.")
 
-print("Number of images with no faces detected:", count_no_face)
-print("Number of images with multiple faces detected:", count_multiple_faces)
-
-
+    print("Number of images with no faces detected:", count_no_face)
+    print("Number of images with multiple faces detected:", count_multiple_faces)
+face_detection(r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\dataset\train\adults','train','adults')
+face_detection(r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\dataset\train\children','train','children')
+face_detection(r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\dataset\test\adults','test','adults')
+face_detection(r'C:\Users\USER\Desktop\sophomore\machine learning\final project_111705010\dataset\dataset\test\children','test','children')
 '''
 #detect specific image
 count_not_detect = 0
